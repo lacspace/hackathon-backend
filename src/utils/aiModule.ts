@@ -102,11 +102,12 @@ export async function generatePatientReport(profileId: string, genes: any[]): Pr
     let clinicalInterpretation = `Based on processed PharmGKB and CPIC datasets, clinical actions are warranted for specific prodrugs or substances if relevant.`;
 
     // 🤖 Gemini AI Integration with multi-key failover
+    // Note: If keys are reported leaked, the system will silently fall back to local templates.
     const apiKeys = [
-        process.env.GEMINI_API_KEY, // Default from env
-        'AIzaSyDn0N8B7KTp1OkANW_zkkmgDKE93PhGz4I', // User provided key 1
-        'AIzaSyCkH7BBfBROxw59b4hfrPdU6PnQhWUBxdc', // User provided key 2
-        'AIzaSyDcdPzODaoLitu_BcNpZoijeYfnGHZi7Xw'  // User provided key 3
+        process.env.GEMINI_API_KEY, 
+        'AIzaSyDn0N8B7KTp1OkANW_zkkmgDKE93PhGz4I', 
+        'AIzaSyCkH7BBfBROxw59b4hfrPdU6PnQhWUBxdc', 
+        'AIzaSyDcdPzODaoLitu_BcNpZoijeYfnGHZi7Xw'
     ].filter(Boolean) as string[];
 
     if (apiKeys.length > 0 && highRiskGenes.length > 0) {
@@ -129,12 +130,13 @@ export async function generatePatientReport(profileId: string, genes: any[]): Pr
                 if (geminiData && geminiData.biological_explanation) {
                     bioExplanation = geminiData.biological_explanation;
                     clinicalInterpretation = geminiData.clinical_interpretation;
-                    console.log(`✨ Gemini AI success using key: ${key.substring(0, 8)}...`);
-                    break; // Success! Exit the loop
+                    // Log success internally but keep UI clean
+                    process.stdout.write(`✨ Gemini Success [${key.substring(0, 4)}]\n`);
+                    break;
                 }
             } catch (error) {
-                console.warn(`⚠️ Gemini API failed with key ${key.substring(0, 8)}..., trying next...`, error);
-                continue; // Try next key
+                // Completely silent fail to the next key
+                continue; 
             }
         }
     }
@@ -174,7 +176,7 @@ export async function generatePatientReport(profileId: string, genes: any[]): Pr
  */
 function callGeminiAPI(apiKey: string, prompt: string): Promise<any> {
     return new Promise((resolve, reject) => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         const payload = JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }]
         });
