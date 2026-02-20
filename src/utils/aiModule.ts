@@ -101,29 +101,41 @@ export async function generatePatientReport(profileId: string, genes: any[]): Pr
 
     let clinicalInterpretation = `Based on processed PharmGKB and CPIC datasets, clinical actions are warranted for specific prodrugs or substances if relevant.`;
 
-    // 🤖 Gemini Integration
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey && highRiskGenes.length > 0) {
-        try {
-            const prompt = `
-                You are a Clinical Pharmacogenomics Expert. 
-                Patient Genetic Findings: ${JSON.stringify(highRiskGenes.map(g => ({ gene: g.gene, phenotype: g.phenotype })))}
-                Clinical Recommendations: ${JSON.stringify(uniqueRecs.map(r => ({ drug: r.drug, action: r.action })))}
-                
-                Provide a professional summary for a medical report:
-                1. A brief "biological_explanation" (2-3 sentences) on how these variants impact enzyme activity.
-                2. A "clinical_interpretation" (2-3 sentences) on the medical implications and next steps for the physician.
-                
-                RESPONSE MUST BE ONLY JSON: {"biological_explanation": "...", "clinical_interpretation": "..."}
-            `;
+    // 🤖 Gemini AI Integration with multi-key failover
+    const apiKeys = [
+        process.env.GEMINI_API_KEY, // Default from env
+        'AIzaSyDn0N8B7KTp1OkANW_zkkmgDKE93PhGz4I', // User provided key 1
+        'AIzaSyCkH7BBfBROxw59b4hfrPdU6PnQhWUBxdc', // User provided key 2
+        'AIzaSyDcdPzODaoLitu_BcNpZoijeYfnGHZi7Xw'  // User provided key 3
+    ].filter(Boolean) as string[];
+
+    if (apiKeys.length > 0 && highRiskGenes.length > 0) {
+        const prompt = `
+            You are a Clinical Pharmacogenomics Expert. 
+            Patient Genetic Findings: ${JSON.stringify(highRiskGenes.map(g => ({ gene: g.gene, phenotype: g.phenotype })))}
+            Clinical Recommendations: ${JSON.stringify(uniqueRecs.map(r => ({ drug: r.drug, action: r.action })))}
             
-            const geminiData = await callGeminiAPI(apiKey, prompt);
-            if (geminiData && geminiData.biological_explanation) {
-                bioExplanation = geminiData.biological_explanation;
-                clinicalInterpretation = geminiData.clinical_interpretation;
+            Provide a professional summary for a medical report:
+            1. A brief "biological_explanation" (2-3 sentences) on how these variants impact enzyme activity.
+            2. A "clinical_interpretation" (2-3 sentences) on the medical implications and next steps for the physician.
+            
+            RESPONSE MUST BE ONLY JSON: {"biological_explanation": "...", "clinical_interpretation": "..."}
+        `;
+
+        // Attempt failover across the key pool
+        for (const key of apiKeys) {
+            try {
+                const geminiData = await callGeminiAPI(key, prompt);
+                if (geminiData && geminiData.biological_explanation) {
+                    bioExplanation = geminiData.biological_explanation;
+                    clinicalInterpretation = geminiData.clinical_interpretation;
+                    console.log(`✨ Gemini AI success using key: ${key.substring(0, 8)}...`);
+                    break; // Success! Exit the loop
+                }
+            } catch (error) {
+                console.warn(`⚠️ Gemini API failed with key ${key.substring(0, 8)}..., trying next...`, error);
+                continue; // Try next key
             }
-        } catch (error) {
-            console.warn('Gemini LLM failed, using template-based fallback.', error);
         }
     }
 
@@ -173,11 +185,16 @@ function callGeminiAPI(apiKey: string, prompt: string): Promise<any> {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(payload)
             },
-            timeout: 8000
+            timeout: 10000
         }, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
+                const status = res.statusCode || 0;
+                if (status >= 400) {
+                    return reject(new Error(`Gemini API Error: ${status} - ${data}`));
+                }
+
                 try {
                     const json = JSON.parse(data);
                     const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';

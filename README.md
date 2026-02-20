@@ -84,6 +84,16 @@ The backend is optimized for the **RIFT 2026 Hackathon** specifications:
 
 ---
 
+## 🔬 Test Credentials
+
+Authorized Clinical Personnel:
+
+- **Admin**: `admin@lacspace.com` (Root)
+- **Lead**: `deep@pharmaguard.com` (Clinician)
+- **Pass**: `Abcd@123.45`
+
+---
+
 ## 👥 Team Members
 
 - **Deep Naraya** (Lead Developer)
