@@ -96,7 +96,7 @@ Authorized Clinical Personnel:
 
 ## 👥 Team Members
 
-- **Deep Naraya** (Lead Developer)
+- **Deep Narayan** (Lead Developer)
 - **Abhishek jain** (Full-Stack Engineer)
 - **Adarsh Kumar Rai** (Cloud Architect)
 
