@@ -2,6 +2,10 @@ import type { IGeneResult } from '../types/index.js';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Use the absolute path for the generated advanced database
 const ADVANCED_DB_PATH = path.join(__dirname, '../data/advanced_drug_db.json');

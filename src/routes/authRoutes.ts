@@ -21,19 +21,42 @@ router.get('/verify', (req: Request, res: Response) => {
 router.post('/login', (req: Request, res: Response) => {
     const { email, password } = req.body;
 
-    // Securely check credentials
-    if (email === 'admin@lacspace.com' && password === 'Abcd@123.45') {
-        const user = {
-            id: 'admin_root_001',
-            name: 'Admin Bro',
+    // Authorized Clinical Personnel
+    const MOCK_USERS = [
+        {
             email: 'admin@lacspace.com',
-            role: 'admin',
-            accessLevel: 'Master Control'
-        };
+            password: 'Abcd@123.45',
+            data: { id: 'admin_root_001', name: 'Admin Bro', email: 'admin@lacspace.com', role: 'admin', accessLevel: 'Master Control' }
+        },
+        {
+            email: 'deep@pharmaguard.com',
+            password: 'Abcd@123.45',
+            data: { id: 'pg_deep_002', name: 'Deep', email: 'deep@pharmaguard.com', role: 'clinician', accessLevel: 'Clinical Lead' }
+        },
+        {
+            email: 'zeeshan@pharmaguard.com',
+            password: 'Abcd@123.45',
+            data: { id: 'pg_zeeshan_003', name: 'Zeeshan', email: 'zeeshan@pharmaguard.com', role: 'clinician', accessLevel: 'Senior Researcher' }
+        },
+        {
+            email: 'abhishek@pharmaguard.com',
+            password: 'Abcd@123.45',
+            data: { id: 'pg_abhishek_004', name: 'Abhishek', email: 'abhishek@pharmaguard.com', role: 'clinician', accessLevel: 'Lab Specialist' }
+        },
+        {
+            email: 'adarsh@pharmaguard.com',
+            password: 'Abcd@123.45',
+            data: { id: 'pg_adarsh_005', name: 'Adarsh', email: 'adarsh@pharmaguard.com', role: 'clinician', accessLevel: 'Data Analyst' }
+        }
+    ];
 
+    const foundUser = MOCK_USERS.find(u => u.email === email && u.password === password);
+
+    if (foundUser) {
+        const user = foundUser.data;
         const token = jwt.sign(user, JWT_SECRET, { expiresIn: '12h' });
 
-        console.log(`🔐 Admin Access Granted: ${email}`);
+        console.log(`🔐 Clinical Access Granted: ${email}`);
 
         return res.json({
             success: true,

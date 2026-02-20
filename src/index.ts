@@ -20,19 +20,25 @@ connectDB().catch(console.error);
 
 const app: Application = express();
 
-// Middleware
+// Hardcore CORS fix
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && (origin.includes('vercel.app') || origin.includes('localhost'))) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('X-CORS-Debug', 'activated');
+    }
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+        return res.status(204).end();
+    }
+    next();
+});
+
+// Other Middleware
 app.use(express.json());
-app.use(cors({
-    origin: [
-        process.env.CLIENT_URL || 'http://localhost:3000',
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:3001',
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-}));
 app.use(helmet({
     crossOriginResourcePolicy: false,
 }));
