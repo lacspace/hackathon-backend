@@ -10,11 +10,8 @@ router.post('/ask', async (req: Request, res: Response) => {
         
         const apiKeys = [
             process.env.GEMINI_API_KEY, 
-            'AIzaSyDn0N8B7KTp1OkANW_zkkmgDKE93PhGz4I', 
-            'AIzaSyCkH7BBfBROxw59b4hfrPdU6PnQhWUBxdc', 
-            'AIzaSyDdDUfBpJEc8BkzUXzFoQu_oErAruqlzQw',
-            'AIzaSyDcdPzODaoLitu_BcNpZoijeYfnGHZi7Xw'
-        ].filter(Boolean) as string[];
+            ...(process.env.GEMINI_API_KEYS ? process.env.GEMINI_API_KEYS.split(',') : [])
+        ].filter(Boolean).map(k => (k as string).trim()) as string[];
 
         const prompt = `
             You are PharmaGuard AI, an expert clinical pharmacogenomics assistant.

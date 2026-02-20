@@ -101,15 +101,12 @@ export async function generatePatientReport(profileId: string, genes: any[]): Pr
 
     let clinicalInterpretation = `Based on processed PharmGKB and CPIC datasets, clinical actions are warranted for specific prodrugs or substances if relevant.`;
 
-    // 🤖 Gemini AI Integration with multi-key failover
-    // Note: If keys are reported leaked, the system will silently fall back to local templates.
+    // 🤖 Gemini AI Integration with multi-key failover from Environment Variables
+    // We parse keys from GEMINI_API_KEYS (comma-separated) to prevent leaking keys in Git.
     const apiKeys = [
         process.env.GEMINI_API_KEY, 
-        'AIzaSyDn0N8B7KTp1OkANW_zkkmgDKE93PhGz4I', 
-        'AIzaSyCkH7BBfBROxw59b4hfrPdU6PnQhWUBxdc', 
-        'AIzaSyDdDUfBpJEc8BkzUXzFoQu_oErAruqlzQw',
-        'AIzaSyDcdPzODaoLitu_BcNpZoijeYfnGHZi7Xw'
-    ].filter(Boolean) as string[];
+        ...(process.env.GEMINI_API_KEYS ? (process.env.GEMINI_API_KEYS as string).split(',') : [])
+    ].filter(Boolean).map(k => (k as string).trim()) as string[];
 
     if (apiKeys.length > 0 && highRiskGenes.length > 0) {
         const prompt = `
