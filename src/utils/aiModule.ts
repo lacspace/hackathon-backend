@@ -107,6 +107,7 @@ export async function generatePatientReport(profileId: string, genes: any[]): Pr
         process.env.GEMINI_API_KEY, 
         'AIzaSyDn0N8B7KTp1OkANW_zkkmgDKE93PhGz4I', 
         'AIzaSyCkH7BBfBROxw59b4hfrPdU6PnQhWUBxdc', 
+        'AIzaSyDdDUfBpJEc8BkzUXzFoQu_oErAruqlzQw',
         'AIzaSyDcdPzODaoLitu_BcNpZoijeYfnGHZi7Xw'
     ].filter(Boolean) as string[];
 
